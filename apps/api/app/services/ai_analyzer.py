@@ -1,10 +1,13 @@
 import json
+import logging
 
 from openai import OpenAI
 
 from app.core.config import get_settings
 from app.schemas.product import AlternativeProduct
 from app.services.product_provider import ProductPayload
+
+logger = logging.getLogger("uvicorn.error")
 
 
 def clamp(value: int) -> int:
@@ -28,11 +31,14 @@ class PurchaseAnalyzer:
                 base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
             )
             self.provider = "gemini"
-            self.model = "gemini-1.5-flash"
+            self.model = "gemini-2.5-flash"
 
     def analyze(self, product: ProductPayload, preferences: dict) -> dict:
         if self.client:
-            return self._analyze_with_openai(product, preferences)
+            try:
+                return self._analyze_with_openai(product, preferences)
+            except Exception as e:
+                logger.error(f"AI Analyzer API request failed: {e}. Falling back to local analysis.")
         return self._fallback_analysis(product, preferences)
 
     def _analyze_with_openai(self, product: ProductPayload, preferences: dict) -> dict:

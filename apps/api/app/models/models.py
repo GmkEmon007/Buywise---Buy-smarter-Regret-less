@@ -1,8 +1,7 @@
 from datetime import datetime
 from uuid import uuid4
 
-from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, String, Text, func
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, String, Text, func, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.session import Base
@@ -11,18 +10,18 @@ from app.db.session import Base
 class User(Base):
     __tablename__ = "users"
 
-    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid4()))
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
     email: Mapped[str] = mapped_column(String, unique=True, index=True)
     full_name: Mapped[str] = mapped_column(String)
     password_hash: Mapped[str] = mapped_column(String)
-    preferences: Mapped[dict] = mapped_column(JSONB, default=dict)
+    preferences: Mapped[dict] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class Product(Base):
     __tablename__ = "products"
 
-    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid4()))
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
     canonical_url: Mapped[str | None] = mapped_column(Text)
     name: Mapped[str] = mapped_column(String, index=True)
     brand: Mapped[str | None] = mapped_column(String)
@@ -38,7 +37,7 @@ class Product(Base):
 class ProductReview(Base):
     __tablename__ = "product_reviews"
 
-    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid4()))
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
     product_id: Mapped[str] = mapped_column(ForeignKey("products.id", ondelete="CASCADE"))
     source: Mapped[str] = mapped_column(String)
     rating: Mapped[float | None] = mapped_column(Numeric(3, 2))
@@ -53,26 +52,26 @@ class ProductReview(Base):
 class Analysis(Base):
     __tablename__ = "analyses"
 
-    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid4()))
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
     user_id: Mapped[str | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
     product_id: Mapped[str] = mapped_column(ForeignKey("products.id", ondelete="CASCADE"))
     buy_score: Mapped[int] = mapped_column(Integer)
     regret_score: Mapped[int] = mapped_column(Integer)
     trust_score: Mapped[int] = mapped_column(Integer)
-    sentiment: Mapped[dict] = mapped_column(JSONB)
-    pros: Mapped[list] = mapped_column(JSONB)
-    cons: Mapped[list] = mapped_column(JSONB)
-    complaints: Mapped[list] = mapped_column(JSONB)
-    risks: Mapped[list] = mapped_column(JSONB)
+    sentiment: Mapped[dict] = mapped_column(JSON)
+    pros: Mapped[list] = mapped_column(JSON)
+    cons: Mapped[list] = mapped_column(JSON)
+    complaints: Mapped[list] = mapped_column(JSON)
+    risks: Mapped[list] = mapped_column(JSON)
     summary: Mapped[str] = mapped_column(Text)
-    alternatives: Mapped[list] = mapped_column(JSONB)
+    alternatives: Mapped[list] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class PricePoint(Base):
     __tablename__ = "price_points"
 
-    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid4()))
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
     product_id: Mapped[str] = mapped_column(ForeignKey("products.id", ondelete="CASCADE"))
     price: Mapped[float] = mapped_column(Numeric(10, 2))
     currency: Mapped[str] = mapped_column(String, default="USD")
