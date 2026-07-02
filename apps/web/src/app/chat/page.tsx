@@ -45,53 +45,83 @@ export default function ChatPage() {
     setQuery("");
     setLoading(true);
 
-    // Simulate AI response delay
-    await new Promise(r => setTimeout(r, 1200));
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+    let aiText = "";
+    let fetched = false;
 
-    let aiMsg: Message = {
-      sender: "ai",
-      text: "Based on our compiled review sentiment feeds, this is a solid choice. Let me outline the primary data parameters for your query."
-    };
-
-    const lowercaseText = textToSend.toLowerCase();
-
-    if (lowercaseText.includes("rtx") || lowercaseText.includes("5070")) {
-      aiMsg = {
-        sender: "ai",
-        text: "According to manufacturing timeline signals and leaks, NVIDIA is expected to announce the RTX 5070 next quarter. Current review signals suggest waiting, as RTX 4070 prices are projected to decline by 12-15% immediately upon launch.",
-        citations: ["r/nvidia", "GamersNexus Transcripts", "HardwareUnboxed Price Index"],
-        productCard: {
-          name: "RTX 5070 (Predicted)",
-          score: 88,
-          price: 599.99,
-          verdict: "Wait for Announcement"
-        },
-        hasPriceChart: true
-      };
-    } else if (lowercaseText.includes("macbook") || lowercaseText.includes("m4")) {
-      aiMsg = {
-        sender: "ai",
-        text: "The MacBook Air M4 scores exceptionally high for developer workloads. Review consensus highlights the 16GB unified memory standard as a huge upgrade. Regret risk is extremely low (under 5%), mostly centered around lack of multiple external displays support.",
-        citations: ["r/macbookair", "Dave2D Reviews", "Apple Insider Benchmarks"],
-        productCard: {
-          name: "MacBook Air M4 (16GB RAM)",
-          score: 94,
-          price: 1099.00,
-          verdict: "Strong Buy"
+    if (baseUrl) {
+      try {
+        const response = await fetch(`${baseUrl}/api/chat`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: textToSend }),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          aiText = data.reply;
+          fetched = true;
         }
-      };
-    } else if (lowercaseText.includes("bose") || lowercaseText.includes("xm5")) {
+      } catch (err) {
+        console.error("Chat API error:", err);
+      }
+    }
+
+    let aiMsg: Message;
+
+    if (fetched) {
       aiMsg = {
         sender: "ai",
-        text: "Comparing the Bose QC Ultra and Sony WH-1000XM5: The Bose leads in active noise cancellation depth and foldability, while the Sony offers slightly cleaner microphone parameters and better value. Most reviewers recommend Bose for travel comfort and Sony for workspaces.",
-        citations: ["r/headphones", "RTINGS Benchmark Index", "SoundGuys Transcripts"],
-        productCard: {
-          name: "Sony WH-1000XM5",
-          score: 80,
-          price: 279.99,
-          verdict: "Buy on Discount"
-        }
+        text: aiText
       };
+    } else {
+      // Simulate AI response delay
+      await new Promise(r => setTimeout(r, 800));
+      aiText = "Based on our compiled review sentiment feeds, this is a solid choice. Let me outline the primary data parameters for your query.";
+
+      const lowercaseText = textToSend.toLowerCase();
+      if (lowercaseText.includes("rtx") || lowercaseText.includes("5070")) {
+        aiMsg = {
+          sender: "ai",
+          text: "According to manufacturing timeline signals and leaks, NVIDIA is expected to announce the RTX 5070 next quarter. Current review signals suggest waiting, as RTX 4070 prices are projected to decline by 12-15% immediately upon launch.",
+          citations: ["r/nvidia", "GamersNexus Transcripts", "HardwareUnboxed Price Index"],
+          productCard: {
+            name: "RTX 5070 (Predicted)",
+            score: 88,
+            price: 599.99,
+            verdict: "Wait for Announcement"
+          },
+          hasPriceChart: true
+        };
+      } else if (lowercaseText.includes("macbook") || lowercaseText.includes("m4")) {
+        aiMsg = {
+          sender: "ai",
+          text: "The MacBook Air M4 scores exceptionally high for developer workloads. Review consensus highlights the 16GB unified memory standard as a huge upgrade. Regret risk is extremely low (under 5%), mostly centered around lack of multiple external displays support.",
+          citations: ["r/macbookair", "Dave2D Reviews", "Apple Insider Benchmarks"],
+          productCard: {
+            name: "MacBook Air M4 (16GB RAM)",
+            score: 94,
+            price: 1099.00,
+            verdict: "Strong Buy"
+          }
+        };
+      } else if (lowercaseText.includes("bose") || lowercaseText.includes("xm5")) {
+        aiMsg = {
+          sender: "ai",
+          text: "Comparing the Bose QC Ultra and Sony WH-1000XM5: The Bose leads in active noise cancellation depth and foldability, while the Sony offers slightly cleaner microphone parameters and better value. Most reviewers recommend Bose for travel comfort and Sony for workspaces.",
+          citations: ["r/headphones", "RTINGS Benchmark Index", "SoundGuys Transcripts"],
+          productCard: {
+            name: "Sony WH-1000XM5",
+            score: 80,
+            price: 279.99,
+            verdict: "Buy on Discount"
+          }
+        };
+      } else {
+        aiMsg = {
+          sender: "ai",
+          text: aiText
+        };
+      }
     }
 
     setMessages(prev => [...prev, aiMsg]);

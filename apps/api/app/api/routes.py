@@ -87,3 +87,15 @@ def recommendations() -> dict:
             {"name": "Anker 737 Power Bank", "category": "Travel", "fit": "Reliable alternative to unknown brands"},
         ]
     }
+
+
+from pydantic import BaseModel
+
+class ChatRequest(BaseModel):
+    message: str
+
+@router.post("/chat")
+def chat_assistant(payload: ChatRequest) -> dict:
+    reply = PurchaseAnalyzer().chat(payload.message)
+    return {"reply": reply}
+

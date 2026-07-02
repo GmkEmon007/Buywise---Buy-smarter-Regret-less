@@ -41,6 +41,22 @@ class PurchaseAnalyzer:
                 logger.error(f"AI Analyzer API request failed: {e}. Falling back to local analysis.")
         return self._fallback_analysis(product, preferences)
 
+    def chat(self, message: str) -> str:
+        if self.client:
+            try:
+                response = self.client.chat.completions.create(
+                    model=self.model,
+                    messages=[
+                        {"role": "system", "content": "You are BuyWise AI assistant, an expert consumer shopping assistant. Help the user compare products, understand buyer regret, find pricing trends, and pick the best value options. Keep responses concise, informative, and beautifully formatted in markdown."},
+                        {"role": "user", "content": message},
+                    ],
+                    temperature=0.7,
+                )
+                return response.choices[0].message.content or "Sorry, I couldn't generate a response."
+            except Exception as e:
+                logger.error(f"Chat API request failed: {e}")
+        return "I'm having trouble connecting to my AI service right now. However, based on local records, the Sony XM5, Bose Ultra, and Apple MacBook Air are all trending with high satisfaction scores."
+
     def _analyze_with_openai(self, product: ProductPayload, preferences: dict) -> dict:
         prompt = {
             "product": product.__dict__,

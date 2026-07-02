@@ -62,14 +62,36 @@ export default function DashboardPage() {
     setQuery("");
     setChatLoading(true);
 
-    await new Promise(r => setTimeout(r, 1000));
-    
-    let aiText = "Based on BuyWise market scans, that product has high satisfaction parameters. Check compare logs for more details.";
-    const lower = textToSend.toLowerCase();
-    if (lower.includes("watchlist") || lower.includes("price")) {
-      aiText = "Your active watchlist has 3 items. Sony WH-1000XM5 has an imminent 82% price drop prediction.";
-    } else if (lower.includes("regret") || lower.includes("avoid")) {
-      aiText = "We found thermal throttling complaints for Dell XPS 13, avoiding a potential buyer regret risk.";
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+    let aiText = "";
+    let fetched = false;
+
+    if (baseUrl) {
+      try {
+        const response = await fetch(`${baseUrl}/api/chat`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: textToSend }),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          aiText = data.reply;
+          fetched = true;
+        }
+      } catch (err) {
+        console.error("Dashboard Chat API error:", err);
+      }
+    }
+
+    if (!fetched) {
+      await new Promise(r => setTimeout(r, 800));
+      aiText = "Based on BuyWise market scans, that product has high satisfaction parameters. Check compare logs for more details.";
+      const lower = textToSend.toLowerCase();
+      if (lower.includes("watchlist") || lower.includes("price")) {
+        aiText = "Your active watchlist has 3 items. Sony WH-1000XM5 has an imminent 82% price drop prediction.";
+      } else if (lower.includes("regret") || lower.includes("avoid")) {
+        aiText = "We found thermal throttling complaints for Dell XPS 13, avoiding a potential buyer regret risk.";
+      }
     }
 
     setChatLog(prev => [...prev, { sender: "ai", text: aiText }]);
