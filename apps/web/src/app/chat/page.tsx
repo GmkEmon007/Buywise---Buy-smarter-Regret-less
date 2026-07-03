@@ -7,6 +7,7 @@ import {
   CheckCircle2, ArrowRight, MessageSquare, ShieldCheck
 } from "lucide-react";
 import Link from "next/link";
+import { RenderMarkdown } from "@/components/markdown";
 
 type Message = {
   sender: "user" | "ai";
@@ -166,7 +167,7 @@ export default function ChatPage() {
                 <div style={{ fontWeight: 800, fontSize: 12, textTransform: "uppercase", color: "var(--teal)", marginBottom: 6 }}>
                   {msg.sender === "user" ? "You" : "BuyWise AI"}
                 </div>
-                <div>{msg.text}</div>
+                <RenderMarkdown text={msg.text} />
               </div>
 
               {/* Citations / Sources */}

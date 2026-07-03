@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { RenderMarkdown } from "@/components/markdown";
 
 const PIE_COLORS = ["#9EE55B", "#3b82f6", "#ef4444"];
 
@@ -260,7 +261,7 @@ export default function DashboardPage() {
                       border: "1px solid var(--border)", fontWeight: 600
                     }}
                   >
-                    {msg.text}
+                    <RenderMarkdown text={msg.text} />
                   </div>
                 ))}
                 {chatLoading && (
