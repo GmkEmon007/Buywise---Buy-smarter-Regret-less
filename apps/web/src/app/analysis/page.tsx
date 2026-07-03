@@ -240,14 +240,16 @@ function AnalysisPageContent() {
 
 export default function AnalysisPage() {
   return (
-    <Suspense fallback={
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 18, marginTop: 24 }}>
-        {[0, 1, 2].map(i => (
-          <div key={i} className="glass" style={{ height: 160, borderRadius: "var(--radius-lg)", border: "1.5px solid var(--border)" }} />
-        ))}
-      </div>
-    }>
-      <AnalysisPageContent />
-    </Suspense>
+    <AppShell>
+      <Suspense fallback={
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 18, marginTop: 24 }}>
+          {[0, 1, 2].map(i => (
+            <div key={i} className="glass" style={{ height: 160, borderRadius: "var(--radius-lg)", border: "1.5px solid var(--border)" }} />
+          ))}
+        </div>
+      }>
+        <AnalysisPageContent />
+      </Suspense>
+    </AppShell>
   );
 }
