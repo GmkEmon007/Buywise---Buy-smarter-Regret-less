@@ -103,29 +103,55 @@ export function DashboardWidgets({ data }: { data: AnalysisResponse }) {
             <div style={{ fontSize: 12, color: "var(--teal)", fontWeight: 800, textTransform: "uppercase", letterSpacing: "1.5px" }}>Analysis Completed</div>
             <h2 style={{ fontSize: 42, fontWeight: 900, letterSpacing: -1.5, color: "var(--text)", marginTop: 6 }}>{data.name}</h2>
             <div style={{ display: "flex", gap: 10, marginTop: 12, alignItems: "center" }}>
-              <span className="badge badge-teal" style={{ fontSize: 13, padding: "6px 14px" }}>{data.buy_score} Buy Score</span>
-              <span style={{ fontSize: 14, color: "var(--muted)", fontWeight: 700 }}>Highly Recommended</span>
+              <span className={`badge ${data.buy_score >= 80 ? 'badge-teal' : data.buy_score >= 60 ? 'badge-blue' : 'badge-red'}`} style={{ fontSize: 13, padding: "6px 14px" }}>{data.buy_score} Buy Score</span>
+              <span style={{ 
+                fontSize: 14, 
+                color: data.buy_score >= 80 ? "var(--teal)" : data.buy_score >= 60 ? "var(--blue)" : "var(--red)", 
+                fontWeight: 700 
+              }}>
+                {data.buy_score >= 80 ? "Highly Recommended" : data.buy_score >= 60 ? "Recommended on Discount" : "Not Recommended"}
+              </span>
             </div>
           </div>
         </div>
 
         {/* Floating AI Verdict Card */}
         <div className="glass" style={{ 
-          padding: 28, borderRadius: "var(--radius-md)", border: "2px solid var(--teal)", 
-          width: 340, boxShadow: "var(--teal-glow)", position: "relative",
+          padding: 28, borderRadius: "var(--radius-md)", 
+          border: `2px solid ${data.buy_score >= 80 ? 'var(--teal)' : data.buy_score >= 60 ? 'var(--blue)' : 'var(--red)'}`, 
+          width: 340, 
+          boxShadow: data.buy_score >= 80 ? 'var(--teal-glow)' : data.buy_score >= 60 ? 'var(--blue-glow)' : 'var(--red-glow)', 
+          position: "relative",
           background: "var(--surface)"
         }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <span style={{ fontWeight: 800, fontSize: 16, display: "flex", alignItems: "center", gap: 6 }}>
-              <Sparkles size={16} className="text-teal" /> AI Verdict
+              <Sparkles size={16} className={data.buy_score >= 80 ? 'text-teal' : data.buy_score >= 60 ? 'text-blue' : 'text-red'} /> AI Verdict
             </span>
-            <span className="badge badge-teal" style={{ fontWeight: 800 }}>Confidence 96%</span>
+            <span className={`badge ${data.buy_score >= 80 ? 'badge-teal' : data.buy_score >= 60 ? 'badge-blue' : 'badge-red'}`} style={{ fontWeight: 800 }}>Confidence 96%</span>
           </div>
-          <div style={{ fontSize: 28, fontWeight: 900, color: "var(--teal)", marginBottom: 12, letterSpacing: -0.5 }}>Buy Now</div>
+          <div style={{ 
+            fontSize: 28, 
+            fontWeight: 900, 
+            color: data.buy_score >= 80 ? 'var(--teal)' : data.buy_score >= 60 ? 'var(--blue)' : 'var(--red)', 
+            marginBottom: 12, 
+            letterSpacing: -0.5 
+          }}>
+            {data.buy_score >= 80 ? "Buy Now" : data.buy_score >= 60 ? "Wait / Compare" : "Avoid Product"}
+          </div>
           <ul style={{ display: "flex", flexDirection: "column", gap: 8, listStyle: "none", fontSize: 13, color: "var(--muted)", fontWeight: 700 }}>
-            <li style={{ display: "flex", gap: 8, alignItems: "center" }}><CheckCircle2 size={15} className="text-teal" /> Lowest price in 3 months</li>
-            <li style={{ display: "flex", gap: 8, alignItems: "center" }}><CheckCircle2 size={15} className="text-teal" /> Battery metrics excellent</li>
-            <li style={{ display: "flex", gap: 8, alignItems: "center" }}><CheckCircle2 size={15} className="text-teal" /> Long-term satisfaction very high</li>
+            <li style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <CheckCircle2 size={15} className={data.buy_score >= 80 ? 'text-teal' : data.buy_score >= 60 ? 'text-blue' : 'text-red'} /> 
+              {data.pros[0] || "Core performance verified"}
+            </li>
+            <li style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <CheckCircle2 size={15} className={data.buy_score >= 80 ? 'text-teal' : data.buy_score >= 60 ? 'text-blue' : 'text-red'} /> 
+              {data.pros[1] || "Solid benchmark ratings"}
+            </li>
+            <li style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <CheckCircle2 size={15} className={data.buy_score >= 80 ? 'text-teal' : data.buy_score >= 60 ? 'text-blue' : 'text-red'} /> 
+              {data.pros[2] || "Reliable consumer response"}
+            </li>
           </ul>
         </div>
       </div>
@@ -300,9 +326,17 @@ export function DashboardWidgets({ data }: { data: AnalysisResponse }) {
                 <h5 style={{ fontWeight: 900, fontSize: 16, color: "var(--text)", marginBottom: 8 }}>Most discussed opinions</h5>
                 <p style={{ fontSize: 15, color: "var(--muted)", lineHeight: 1.6 }}>Redditors praise the headband comfort and call the soundstage exceptionally balanced. Frequent discussions mention the touch controls as slightly over-sensitive.</p>
               </div>
-              <div style={{ borderLeft: "4px solid var(--teal)", paddingLeft: 18, background: "var(--bg2)", padding: 16, borderRadius: 14 }}>
+              <div style={{ borderLeft: "4px solid var(--teal)", paddingLeft: 18, marginBottom: 18 }}>
+                <h5 style={{ fontWeight: 900, fontSize: 16, color: "var(--text)", marginBottom: 8 }}>Most discussed opinions</h5>
+                <p style={{ fontSize: 15, color: "var(--muted)", lineHeight: 1.6 }}>
+                  Community feedback praises {data.pros[0] || "overall reliability"} and calls {data.pros[1] || "key features"} extremely balanced. Key highlights include {data.pros[2] || "strong performance value"}.
+                </p>
+              </div>
+              <div style={{ borderLeft: "4px solid var(--red)", paddingLeft: 18, background: "var(--bg2)", padding: 16, borderRadius: 14 }}>
                 <h5 style={{ fontWeight: 900, fontSize: 16, color: "var(--text)", marginBottom: 8 }}>Most common complaints</h5>
-                <p style={{ fontSize: 15, color: "var(--muted)", lineHeight: 1.6 }}>"The ear cups can make your ears feel hot during long editing sessions." - 142 upvotes in r/headphones</p>
+                <p style={{ fontSize: 15, color: "var(--muted)", lineHeight: 1.6 }}>
+                  "{data.complaints[0] || "Price feels high versus rivals"}" - Top community thread discussion.
+                </p>
               </div>
             </div>
           )}
@@ -311,10 +345,12 @@ export function DashboardWidgets({ data }: { data: AnalysisResponse }) {
             <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
               <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
                 <span className="badge badge-teal">20 Videos Analyzed</span>
-                <span style={{ fontSize: 14, color: "var(--text)", fontWeight: 800 }}>Overall consensus: Highly Recommended</span>
+                <span style={{ fontSize: 14, color: "var(--text)", fontWeight: 800 }}>
+                  Overall consensus: {data.buy_score >= 80 ? "Highly Recommended" : data.buy_score >= 60 ? "Recommended" : "Not Recommended"}
+                </span>
               </div>
               <p style={{ fontSize: 15, color: "var(--muted)", lineHeight: 1.7 }}>
-                Top reviewers like MKBHD and Dave2D recommend this product for corporate travelers. Creators suggest turning off automatic wear detection if you prefer custom EQ behaviors.
+                {data.summary || "No video synthesis matches found. The overall community sentiment remains neutral."}
               </p>
             </div>
           )}
