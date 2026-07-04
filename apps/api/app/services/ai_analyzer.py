@@ -14,7 +14,32 @@ def clamp(value: int) -> int:
     return max(0, min(100, value))
 
 
+def parse_int(value, default: int = 0) -> int:
+    if value is None:
+        return default
+    if isinstance(value, (int, float)):
+        return int(value)
+    try:
+        cleaned = "".join(c for c in str(value) if c.isdigit() or c == '-')
+        return int(cleaned) if cleaned else default
+    except Exception:
+        return default
+
+
+def parse_float(value, default: float = 0.0) -> float:
+    if value is None:
+        return default
+    if isinstance(value, (int, float)):
+        return float(value)
+    try:
+        cleaned = "".join(c for c in str(value) if c.isdigit() or c == '.')
+        return float(cleaned) if cleaned else default
+    except Exception:
+        return default
+
+
 class PurchaseAnalyzer:
+
     def __init__(self) -> None:
         settings = get_settings()
         self.provider = "openai"
@@ -61,19 +86,28 @@ class PurchaseAnalyzer:
         prompt = {
             "product": product.__dict__,
             "preferences": preferences,
-            "instruction": "Return JSON with buy_score, regret_score, trust_score, sentiment, pros, cons, complaints, risks, summary, alternatives. Respond ONLY with the raw JSON string.",
+            "instruction": (
+                "Analyze the product and user preferences. Return a JSON object with the following fields: "
+                "buy_score (int 0-100), regret_score (int 0-100), trust_score (int 0-100), "
+                "sentiment (object with keys 'positive', 'neutral', 'negative' as integer percentages summing to 100), "
+                "pros (list of strings, max 4), cons (list of strings, max 4), "
+                "complaints (list of strings, max 4), risks (list of strings, max 4), "
+                "summary (string summarizing the product and key purchase/regret factors), "
+                "alternatives (list of objects, each containing: 'name' string, 'reason' string, "
+                "'estimated_price' float, 'buy_score' int 0-100). "
+                "Respond ONLY with the raw JSON string matching this exact schema."
+            ),
         }
         response = self.client.chat.completions.create(
             model=self.model,
             messages=[
-                {"role": "system", "content": "You are BuyWise, a precise consumer purchase intelligence analyst. Return valid compact JSON only."},
+                {"role": "system", "content": "You are BuyWise, a precise consumer purchase intelligence analyst. Return valid compact JSON only matching the requested schema."},
                 {"role": "user", "content": json.dumps(prompt)},
             ],
             temperature=0.2,
             response_format={"type": "json_object"} if self.provider == "openai" else None,
         )
         content_str = response.choices[0].message.content or "{}"
-        # Strip markdown code blocks if Gemini returns them
         if content_str.startswith("```"):
             lines = content_str.split("\n")
             if lines[0].startswith("```"):
@@ -110,12 +144,48 @@ class PurchaseAnalyzer:
         )
 
     def _normalize(self, data: dict) -> dict:
-        alternatives = [AlternativeProduct(**item).model_dump() for item in data.get("alternatives", [])[:4]]
+        alternatives = []
+        for item in data.get("alternatives", [])[:4]:
+            if isinstance(item, dict):
+                try:
+                    alternatives.append(AlternativeProduct(
+                        name=str(item.get("name", "Alternative Product")),
+                        reason=str(item.get("reason", "Good choice")),
+                        estimated_price=parse_float(item.get("estimated_price", 0.0)),
+                        buy_score=clamp(parse_int(item.get("buy_score", 75)))
+                    ).model_dump())
+                except Exception as e:
+                    logger.warning(f"Failed to parse alternative dict: {item}. Error: {e}")
+            elif isinstance(item, str):
+                alternatives.append(AlternativeProduct(
+                    name=item,
+                    reason="Alternative choice",
+                    estimated_price=0.0,
+                    buy_score=75
+                ).model_dump())
+
+        if not alternatives:
+            alternatives = [
+                AlternativeProduct(name="Alternative A", reason="Alternative choice", estimated_price=0.0, buy_score=75).model_dump()
+            ]
+
+        sentiment_src = data.get("sentiment", {})
+        pos = parse_int(sentiment_src.get("positive", 60))
+        neu = parse_int(sentiment_src.get("neutral", 25))
+        neg = parse_int(sentiment_src.get("negative", 15))
+        total = pos + neu + neg
+        if total > 0:
+            pos = int((pos / total) * 100)
+            neu = int((neu / total) * 100)
+            neg = 100 - pos - neu
+        else:
+            pos, neu, neg = 60, 25, 15
+
         return {
-            "buy_score": clamp(int(data.get("buy_score", 75))),
-            "regret_score": clamp(int(data.get("regret_score", 25))),
-            "trust_score": clamp(int(data.get("trust_score", 75))),
-            "sentiment": data.get("sentiment", {"positive": 60, "neutral": 25, "negative": 15}),
+            "buy_score": clamp(parse_int(data.get("buy_score", 75))),
+            "regret_score": clamp(parse_int(data.get("regret_score", 25))),
+            "trust_score": clamp(parse_int(data.get("trust_score", 75))),
+            "sentiment": {"positive": pos, "neutral": neu, "negative": neg},
             "pros": list(data.get("pros", []))[:6],
             "cons": list(data.get("cons", []))[:6],
             "complaints": list(data.get("complaints", []))[:6],
