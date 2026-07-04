@@ -584,7 +584,7 @@ export function DashboardWidgets({ data }: { data: AnalysisResponse }) {
       <section id="sources" style={{ marginBottom: 48, borderTop: "1.5px solid var(--border)", paddingTop: 48 }}>
         <h3 style={{ fontSize: 32, fontWeight: 950, letterSpacing: -1, marginBottom: 32, textAlign: "center" }}>Data Transparency</h3>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 16 }}>
-          {["Amazon Reviews", "Reddit Forums", "YouTube Transcripts", "Best Buy Index", "Tech Forums"].map((source) => (
+          {["Amazon Reviews", "Reddit Forums", "Walmart Reviews", "Best Buy Index", "Google Shopping"].map((source) => (
             <div key={source} className="glass" style={{ padding: "16px 12px", borderRadius: 16, border: "1.5px solid var(--glass-border)", background: "var(--glass-bg)", textAlign: "center", display: "flex", flexDirection: "column", gap: 6 }}>
               <div style={{ fontWeight: 800, fontSize: 13 }}>{source}</div>
               <div style={{ display: "flex", gap: 2, justifyContent: "center" }}>

@@ -49,7 +49,10 @@ const fallback: AnalysisResponse = {
   ],
 };
 
-export async function analyzeProduct(query: string): Promise<AnalysisResponse> {
+export async function analyzeProduct(
+  query: string,
+  preferences?: { priorities: string[]; custom?: string }
+): Promise<AnalysisResponse> {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
   if (!baseUrl) return fallback;
 
@@ -57,7 +60,10 @@ export async function analyzeProduct(query: string): Promise<AnalysisResponse> {
     const response = await fetch(`${baseUrl}/api/analysis`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query, preferences: { priorities: ["value", "reliability", "low regret"] } }),
+      body: JSON.stringify({ 
+        query, 
+        preferences: preferences || { priorities: ["value", "reliability", "low regret"] } 
+      }),
       cache: "no-store",
     });
     if (!response.ok) throw new Error("Analysis failed");

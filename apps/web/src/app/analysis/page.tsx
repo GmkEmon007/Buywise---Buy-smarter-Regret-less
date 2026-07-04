@@ -5,13 +5,21 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { DashboardWidgets } from "@/components/dashboard-widgets";
 import { AnalysisResponse, analyzeProduct } from "@/lib/api";
-import { Search, Sparkles, TrendingUp, Cpu, Award } from "lucide-react";
+import { Search, Sparkles } from "lucide-react";
 
 const SUGGESTIONS = [
   { name: "Sony WH-1000XM5", icon: "🎧", desc: "Best-in-class headphones" },
   { name: "MacBook Air M4", icon: "💻", desc: "Premium developer laptop" },
   { name: "RTX 5070", icon: "🎮", desc: "Next-gen graphics card" },
   { name: "Vivo X200", icon: "📱", desc: "Flagship mobile display" }
+];
+
+const PRIORITIES = [
+  { id: "value", label: "💰 Best Value" },
+  { id: "reliability", label: "🛡️ Durability / Reliability" },
+  { id: "performance", label: "⚡ High Performance" },
+  { id: "design", label: "🎨 Premium Design" },
+  { id: "features", label: "⚙️ Rich Features" }
 ];
 
 function AnalysisPageContent() {
@@ -24,6 +32,11 @@ function AnalysisPageContent() {
   const [data, setData] = useState<AnalysisResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loadStep, setLoadStep] = useState(0);
+
+  // Personalized Advice Configuration
+  const [selectedPriorities, setSelectedPriorities] = useState<string[]>([]);
+  const [customPrompt, setCustomPrompt] = useState("");
+  const [showPriorities, setShowPriorities] = useState(false);
 
   // loading steps animation
   useEffect(() => {
@@ -51,7 +64,10 @@ function AnalysisPageContent() {
     setError(null);
     setData(null);
     try {
-      const result = await analyzeProduct(searchQuery);
+      const result = await analyzeProduct(searchQuery, {
+        priorities: selectedPriorities.length > 0 ? selectedPriorities : ["value", "reliability", "low regret"],
+        custom: customPrompt || undefined
+      });
       setData(result);
     } catch {
       setError("Analysis failed. Please check your network or try again.");
@@ -105,7 +121,10 @@ function AnalysisPageContent() {
           padding: 20, 
           borderRadius: 28, 
           border: "1.5px solid var(--border)",
-          boxShadow: "rgba(0, 0, 0, 0.02) 0px 10px 40px"
+          boxShadow: "rgba(0, 0, 0, 0.02) 0px 10px 40px",
+          display: "flex",
+          flexDirection: "column",
+          gap: 16
         }}>
           <form onSubmit={onSubmit} style={{ display: "flex", gap: 12 }}>
             <div style={{ flex: 1, position: "relative", display: "flex", alignItems: "center" }}>
@@ -143,6 +162,87 @@ function AnalysisPageContent() {
               {loading ? "Analyzing..." : "Search Product"}
             </button>
           </form>
+
+          {/* Personalized Advice Config Box */}
+          <div style={{ borderTop: "1px solid var(--border)", paddingTop: 14 }}>
+            <button
+              type="button"
+              onClick={() => setShowPriorities(!showPriorities)}
+              style={{
+                background: "none",
+                border: "none",
+                fontSize: 13,
+                fontWeight: 800,
+                color: "var(--teal)",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                padding: 0
+              }}
+            >
+              <Sparkles size={14} /> {showPriorities ? "Hide Advice Configuration" : "Configure Personalized AI Advice (Optional)"}
+            </button>
+
+            {showPriorities && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 14, animation: "fadeIn 0.3s ease" }}>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: "var(--muted)", textTransform: "uppercase", marginBottom: 8, letterSpacing: 0.5 }}>What matters most to you?</div>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    {PRIORITIES.map(p => {
+                      const active = selectedPriorities.includes(p.id);
+                      return (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => {
+                            if (active) {
+                              setSelectedPriorities(selectedPriorities.filter(x => x !== p.id));
+                            } else {
+                              setSelectedPriorities([...selectedPriorities, p.id]);
+                            }
+                          }}
+                          style={{
+                            padding: "8px 14px",
+                            borderRadius: 100,
+                            fontSize: 12,
+                            fontWeight: 700,
+                            border: "1.5px solid var(--border)",
+                            background: active ? "var(--teal-dim)" : "var(--surface)",
+                            borderColor: active ? "var(--teal)" : "var(--border)",
+                            color: active ? "var(--teal)" : "var(--muted)",
+                            cursor: "pointer",
+                            transition: "var(--transition-smooth)"
+                          }}
+                        >
+                          {p.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: "var(--muted)", textTransform: "uppercase", marginBottom: 8, letterSpacing: 0.5 }}>Custom preference note (e.g. "Long battery life for travel")</div>
+                  <input
+                    className="input"
+                    value={customPrompt}
+                    onChange={e => setCustomPrompt(e.target.value)}
+                    placeholder="Must be travel-friendly, good for outdoor calls..."
+                    style={{
+                      height: 38,
+                      borderRadius: 10,
+                      fontSize: 13,
+                      padding: "0 12px",
+                      background: "var(--bg)",
+                      border: "1.5px solid var(--border)"
+                    }}
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Suggestion tags displayed only on landing state */}
